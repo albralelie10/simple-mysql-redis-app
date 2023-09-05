@@ -22,9 +22,9 @@ const db=mysql.createConnection({
 
 db.connect((err)=>{
   if(err){
-    console.log("Connect to MYSQL server...")
+    console.log("Connection with MYSQL Failed",err)
   }else{
-    console.log("Connection with MYSQL server failed:",err)
+    console.log("Connect with MYSQL DB.....")
   }
 })
  
@@ -93,47 +93,3 @@ app.get('/database', (req, res) => {
 app.listen(3000, () => console.log("Listening on port 3000"));
 
 
-
-
-// import { createClient } from "redis";
-
-// const client = createClient();
-// client.on("error", (err) => console.log("Redis Client Error", err));
-// const connect = async () => {
-//   try {
-//     await client.connect();
-//     console.log("Connected to Redis");
-//   } catch (error) {
-//     console.log("Error connecting to Redis", error);
-//   }
-// };
-// connect();
-
-// app.get("/", (req, res) => {
-//   res.send("I love Redis!");
-// });
-
-// const DEFAULT_EXPIRATION = 3600;
-
-// app.get("/photos", async (req, res) => {
-//   const albumId = req.query.albumId;
-
-//   // Check the cache
-//   const value = await client.get("photos");
-//   if (value) {
-//     console.log("Cache hit!");
-//     res.json(JSON.parse(value));
-//   } else {
-//     console.log("Cache miss!");
-//     const data = await axios.get(
-//       "https://jsonplaceholder.typicode.com/photos",
-//       {
-//         params: {
-//           albumId,
-//         },
-//       }
-//     );
-//     client.setEx("photos", DEFAULT_EXPIRATION, JSON.stringify(data.data));
-//     res.json(data.data);
-//   }
-// });
