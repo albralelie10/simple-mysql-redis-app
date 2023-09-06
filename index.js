@@ -2,7 +2,6 @@ import express from "express";
 import axios from "axios";
 import {createClient} from "redis"
 import cors from "cors"
-import mysql from "mysql2"
 
 const app = express();
 // Create Redis Client
@@ -10,25 +9,7 @@ app.use(express.json())
 app.use(cors())
 app.use(express.urlencoded({extended:false}))
 
-//mysql Client
-const db=mysql.createConnection({
-  host:"127.0.0.1",
-  user:"root",
-  password:"Albralelie12@",
-  database:"sluts",
-})
 
-db.connect((err)=>{
-  if(err){
-    console.log("Connection with MYSQL Failed",err)
-  }else{
-    console.log("Connect with MYSQL DB.....")
-  }
-})
- 
-///
-
-////
 const client=createClient();
 client.on("error",(error)=>console.log("Redis client Error",error))
 const connect=async()=>{
@@ -46,28 +27,43 @@ connect();
 app.get("/",(req,res)=>{
   return res.send("REDIS API HOME PAGE")
 })
+
 const DEFAULT_EXPIRATION=3600
+
 app.get("/photos",async(req,res)=>{
   try{
-    const albumId=req.query.albumId;
-    const value=await client.get(`photos:${albumId}`);
-    if(value){
-      console.log("Hit match")
-      return res.json(JSON.parse(value))
-    }else{
-      console.log("Cache miss")
-      const {data}=await axios.get("https://jsonplaceholder.typicode.com/photos",{
+  const albumId=req.query.albumId;
+  const dataRequest=await getCacheStatus(`photos:${albumId}`,async ()=>{
+    const {data}=await axios.get("https://jsonplaceholder.typicode.com/photos",{
         params:{
           albumId
         }
       })
-      client.setEx(`photos:${albumId}`,DEFAULT_EXPIRATION,JSON.stringify(data))
-      return res.json(data)
-    }
+      return data;
+  })
+    return res.json(dataRequest)
   }catch(err){
-    return res.json(err)
+    return res.status(500).json(err)
   }
 })
+
+
+function  getCacheStatus(key,cb){
+  return new Promise(async(resolve,reject)=>{
+    try{
+      const value=await client.get(key)
+      if(value)return resolve(JSON.parse(value))
+      const freshData=await cb()
+      client.setEx(key,DEFAULT_EXPIRATION,JSON.stringify(freshData))
+      resolve(freshData)
+    }catch(err){
+      return reject(err)
+    }
+    
+  })
+}
+
+app.listen(3000, () => console.log("Listening on port 3000"));
 
 
 // app.get('/database', (req, res) => {
@@ -87,6 +83,6 @@ app.get("/photos",async(req,res)=>{
 //   })
 //   });
 
-app.listen(3000, () => console.log("Listening on port 3000"));
+// app.listen(3000, () => console.log("Listening on port 3000"));
 
 
