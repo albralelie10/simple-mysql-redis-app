@@ -10,8 +10,6 @@ app.use(express.json())
 app.use(cors())
 app.use(express.urlencoded({extended:false}))
 
-
-
 //mysql Client
 const db=mysql.createConnection({
   host:"127.0.0.1",
@@ -29,8 +27,6 @@ db.connect((err)=>{
 })
  
 ///
-
-
 
 ////
 const client=createClient();
@@ -54,7 +50,7 @@ const DEFAULT_EXPIRATION=3600
 app.get("/photos",async(req,res)=>{
   try{
     const albumId=req.query.albumId;
-    const value=await client.get("photos");
+    const value=await client.get(`photos:${albumId}`);
     if(value){
       console.log("Hit match")
       return res.json(JSON.parse(value))
@@ -65,7 +61,7 @@ app.get("/photos",async(req,res)=>{
           albumId
         }
       })
-      client.setEx("photos",DEFAULT_EXPIRATION,JSON.stringify(data))
+      client.setEx(`photos:${albumId}`,DEFAULT_EXPIRATION,JSON.stringify(data))
       return res.json(data)
     }
   }catch(err){
@@ -73,22 +69,23 @@ app.get("/photos",async(req,res)=>{
   }
 })
 
-app.get('/database', (req, res) => {
 
-  const q="SELECT * FROM my_sluts";
-  db.query(q,async(err,data)=>{
-    if(err)return res.status(500).json(err)
-    const value=await client.get("nombre")
-    if(value){
-      console.log("Hit value from redis")
-      return res.json(JSON.parse(value))
-    }else{
-      console.log("Cache MISS")
-      client.setEx("nombre",DEFAULT_EXPIRATION,JSON.stringify(data))
-      return res.json(data)
-    }
-  })
-  });
+// app.get('/database', (req, res) => {
+
+//   const q="SELECT * FROM my_sluts";
+//   db.query(q,async(err,data)=>{
+//     if(err)return res.status(500).json(err)
+//     const value=await client.get("nombre")
+//     if(value){
+//       console.log("Hit value from redis")
+//       return res.json(JSON.parse(value))
+//     }else{
+//       console.log("Cache MISS")
+//       client.setEx("nombre",DEFAULT_EXPIRATION,JSON.stringify(data))
+//       return res.json(data)
+//     }
+//   })
+//   });
 
 app.listen(3000, () => console.log("Listening on port 3000"));
 
